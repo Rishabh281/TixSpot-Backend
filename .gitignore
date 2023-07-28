@@ -1,1 +1,7 @@
 env/*
+
+
+__pycache__/
+tixspot/pylintrc
+tixspot/.env
+tixspot/__init__.py
