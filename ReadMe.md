@@ -4,4 +4,4 @@ https://docs.google.com/document/d/1qaqfC3fGkYJ8rWwl-dUeSiHB5ObjcJYCjpzmflzXhjE/
 
 https://docs.google.com/document/d/1T6upKgsjrmIbEgm1SHfZpb5zPfbYcUYyWt_nLtXD8QI/edit?usp=sharing
 
-We are Using FastApi
+We are Using FastApi with Python 3.8
