@@ -7,7 +7,7 @@ from dotenv import dotenv_values
 
 
 def connect_to_db():
-    """"example"""
+    """"connect_to_db"""
     config = dotenv_values(".env")  # config = {"USER": "foo", "EMAIL": "foo@example.org"}
 
     uri = config['URI']
