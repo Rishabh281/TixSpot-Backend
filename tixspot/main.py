@@ -4,8 +4,8 @@ from typing import Union
 from fastapi import FastAPI
 from fastapi import APIRouter
 
-from connect_to_db import connect_to_db  # pylint: disable=import-error
-from create_user import create_user  # pylint: disable=import-error
+from connect_to_db import connect_to_db
+from create_user import create_user
 from auth import auth, endpoints
 app = FastAPI()
 

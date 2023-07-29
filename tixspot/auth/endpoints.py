@@ -1,4 +1,8 @@
 # pylint: disable=no-member
+
+
+from connect_to_db import connect_to_db  # pylint: disable=import-error
+from get_user import get_user
 from fastapi import APIRouter
 from datetime import datetime, timedelta
 from typing import Union
@@ -10,7 +14,7 @@ from passlib.context import CryptContext
 from pydantic import BaseModel
 from typing_extensions import Annotated
 
-from .auth import authenticate_user, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_HOURS, get_current_active_user, create_access_token, create_refresh_token, new_tokens_using_refresh, valid_token
+from .auth import tokens_from_login, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_HOURS, new_tokens_using_refresh, validate_token
 router = APIRouter()
 
 
@@ -30,54 +34,18 @@ class User(BaseModel):
     disabled: Union[bool, None] = None
 
 
-fake_users_db = {
-    "johndoe": {
-        "username": "johndoe",
-        "full_name": "John Doe",
-        "email": "johndoe@example.com",
-        "hashed_password": "$2b$12$a1tv.Vkae0lZDe9lQAeafOoVPNnw7rU0S5gXtq3OPznKeap88u8Ga",
-        "disabled": False,
-    }
-}
-
-
+# creates new access and refresh tokens, need to send username and password in formdata
 @router.post("/token", response_model=Token)
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
 ):
-    user = authenticate_user(fake_users_db, form_data.username, form_data.password)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user.username, "token_type": 'access'}, expires_delta=access_token_expires
-    )
-    refresh_token_expires = timedelta(hours=REFRESH_TOKEN_EXPIRE_HOURS)
-    refresh_token = create_refresh_token(
-        data={"sub": user.username, "token_type": 'refresh'}, expires_delta=refresh_token_expires
-    )
+    (access_token, refresh_token) = await tokens_from_login(
+        form_data.username, form_data.password, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_HOURS)
+
     return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
 
 
-@router.get("/users/me/", response_model=User)
-async def read_users_me(
-    current_user: Annotated[User, Depends(get_current_active_user)]
-):
-    return current_user
-
-
-@router.get("/users/me/items/")
-async def read_own_items(
-    current_user: Annotated[User, Depends(get_current_active_user)]
-):
-    return [{"item_id": "Foo", "owner": current_user.username}]
-
-
-@router.get("/refresh")
+@router.get("/refresh")  # creates new tokens using a refresh token
 async def refresh(
     refresh: Annotated[Union[str, None], Header()] = None
 ):
@@ -86,10 +54,10 @@ async def refresh(
     return [{"tokens": tokens}]
 
 
-@router.get("/protected")
+@router.get("/protected")  # protected routes can be used this way
 async def protected(
     authorization: Annotated[Union[str, None], Depends(oauth2_scheme)] = None
 ):
-    user = await valid_token(authorization, 'access')
-    print(user)
-    return [{"user": user}]
+    user = await validate_token(authorization, 'access')
+    print(user['username'])
+    return [{"user": user['username']}]
