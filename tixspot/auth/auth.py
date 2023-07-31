@@ -51,6 +51,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 app = FastAPI()
 
 client = connect_to_db()
+database = client['tixspot']
 
 
 def verify_password(plain_password, hashed_password):
@@ -107,7 +108,7 @@ async def validate_token(token, token_type):
         token_data = TokenData(username=username)
     except JWTError:
         raise credentials_exception
-    user = get_user(client['users'], email=token_data.username)
+    user = get_user(database, email=token_data.username)
     if user is None:
         raise credentials_exception
     return user
@@ -128,7 +129,7 @@ async def new_tokens_using_refresh(refresh):
 
 async def tokens_from_login(username, password, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_HOURS):
 
-    user = get_user(client['users'], username)
+    user = get_user(database, username)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
