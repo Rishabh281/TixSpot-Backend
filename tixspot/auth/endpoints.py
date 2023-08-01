@@ -1,6 +1,8 @@
 # pylint: disable=no-member
 
 
+from connect_to_db import connect_to_db
+from create_user import create_user
 from connect_to_db import connect_to_db  # pylint: disable=import-error
 from get_user import get_user
 from fastapi import APIRouter
@@ -45,6 +47,21 @@ class Login(BaseModel):
 async def login_for_access_token(
     email: Annotated[str, Form()], password: Annotated[str, Form()]
 ):
+    (access_token, refresh_token) = await tokens_from_login(
+        email, password, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_HOURS)
+
+    return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
+
+
+@router.post("/register", response_model=Token)
+async def register(
+    email: Annotated[str, Form()], password: Annotated[str, Form()], first_name: Annotated[str, Form()], last_name: Annotated[str, Form()], username: Annotated[str, Form()]
+):
+    client = connect_to_db()
+
+    user_id = create_user(client['tixspot'], first_name, last_name, email, username, password)
+    if not user_id:
+        return (401)
     (access_token, refresh_token) = await tokens_from_login(
         email, password, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_HOURS)
 
