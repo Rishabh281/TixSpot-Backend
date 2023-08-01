@@ -77,10 +77,10 @@ async def refresh(
     return [{"tokens": tokens}]
 
 
-@router.get("/protected")  # protected routes can be used this way
-async def protected(
-    authorization: Annotated[Union[str, None], Depends(oauth2_scheme)] = None
-):
-    user = await validate_token(authorization, 'access')
-    print(user['username'])
-    return [{"user": user['username']}]
+# @router.get("/protected")  # protected routes can be used this way
+# async def protected(
+#     authorization: Annotated[Union[str, None], Depends(oauth2_scheme)] = None
+# ):
+#     user = await validate_token(authorization, 'access')
+#     print(user['username'])
+#     return [{"user": user['username']}]
