@@ -21,3 +21,4 @@ def create_user(db, first_name, last_name, email, username, password, date=datet
 
     user_id = users.insert_one(user).inserted_id
     print(user_id)
+    return (user_id)
