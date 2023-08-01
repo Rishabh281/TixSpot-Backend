@@ -7,7 +7,7 @@ from fastapi import APIRouter
 from datetime import datetime, timedelta
 from typing import Union
 
-from fastapi import Depends, FastAPI, HTTPException, status, Header
+from fastapi import Depends, Form, FastAPI, HTTPException, status, Header
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -34,13 +34,19 @@ class User(BaseModel):
     disabled: Union[bool, None] = None
 
 
+class Login(BaseModel):
+    email: str
+    password: str
+
 # creates new access and refresh tokens, need to send username and password in formdata
-@router.post("/token", response_model=Token)
+
+
+@router.post("/login", response_model=Token)
 async def login_for_access_token(
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
+    email: Annotated[str, Form()], password: Annotated[str, Form()]
 ):
     (access_token, refresh_token) = await tokens_from_login(
-        form_data.username, form_data.password, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_HOURS)
+        email, password, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_HOURS)
 
     return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
 
