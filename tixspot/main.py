@@ -12,6 +12,7 @@ from fastapi import FastAPI
 from fastapi import APIRouter
 from fastapi import Form
 from fastapi import Depends
+from fastapi.middleware.cors import CORSMiddleware
 from typing_extensions import Annotated
 
 from connect_to_db import connect_to_db
@@ -21,6 +22,19 @@ from create_artist import create_artist
 from get_user import get_user
 from get_artists import get_artists
 app = FastAPI()
+
+origins = [
+    "http://localhost:3000"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 client = connect_to_db()
 app.include_router(auth.router, prefix='')
