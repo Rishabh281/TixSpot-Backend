@@ -51,7 +51,7 @@ async def events_create(create_event_form: CreateEvent, authorization: Annotated
     return create_event_form
 
 
-@app.post("/events/getall")
+@app.get("/events/getall")
 async def get_events_all():
 
     return get_events(client['tixspot'])
