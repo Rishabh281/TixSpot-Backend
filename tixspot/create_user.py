@@ -2,7 +2,7 @@ import datetime
 from passlib.context import CryptContext
 
 
-def create_user(db, first_name, last_name, email, username, password, date=datetime.datetime.now(tz=datetime.timezone.utc)):
+def create_user(db, email,password, first_name=None, last_name=None, username=None,  date=datetime.datetime.now(tz=datetime.timezone.utc)):
     """create_user"""
     users = db.users
     if (users.find_one({"email": email})):
