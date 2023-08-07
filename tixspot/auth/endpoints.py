@@ -57,7 +57,8 @@ async def set_refresh_token(data, refresh_token):
     response.set_cookie(
         key="refresh_token",
         value=refresh_token,
-        httponly=True
+        samesite='none',
+        secure=True
     )
     return(response)
 
