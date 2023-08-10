@@ -50,7 +50,7 @@ async def get_refresh_cookie(request):
     tokens = await new_tokens_using_refresh(cookie_value)
     return(tokens)    
 
-async def set_refresh_token(data, refresh_token):
+async def set_refresh_cookie(data, refresh_token):
     # Create a JSON response
     response = Response(content=json.dumps(data), media_type="application/json")
     # Set the first cookie
@@ -80,9 +80,21 @@ async def login_for_access_token(
     }
     
     # Create a JSON response
-    response = await set_refresh_token(data,refresh_token)
+    response = await set_refresh_cookie(data,refresh_token)
     return response
 
+@router.post("/token", response_model=Token) #only to allow login in swaggerui
+async def login_for_access_token_swaggerui( form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
+    (access_token, refresh_token) = await tokens_from_login(
+        form_data.username, form_data.password, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_HOURS)
+    data = {
+        "access_token": access_token,
+       "token_type": "bearer"
+    }
+    
+    # Create a JSON response
+    response = await set_refresh_cookie(data,refresh_token)
+    return response
 
 
 @router.post("/register", response_model=Token)
@@ -96,7 +108,7 @@ async def register(email: str = Form(),password:str=Form()):
         email, password, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_HOURS)
     data={"access_token": access_token, "token_type": "bearer"}
     print(data)
-    response = await set_refresh_token(data,refresh_token)
+    response = await set_refresh_cookie(data,refresh_token)
     return(response)
 
 
