@@ -127,7 +127,7 @@ async def new_tokens_using_refresh(refresh):
     return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
 
 
-async def tokens_from_login(email, password, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_HOURS):
+async def tokens_from_login(email, password=True, ACCESS_TOKEN_EXPIRE_MINUTES=60, REFRESH_TOKEN_EXPIRE_HOURS=24):
 
     user = get_user(database, email)
     if not user:
@@ -136,14 +136,15 @@ async def tokens_from_login(email, password, ACCESS_TOKEN_EXPIRE_MINUTES, REFRES
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    verified_password = verify_password(password, user['password'])
+    if password:
+        verified_password = verify_password(password, user['password'])
 
-    if not user or not verified_password:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        if not verified_password:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect email or password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user['email'], "token_type": 'access'}, expires_delta=access_token_expires
