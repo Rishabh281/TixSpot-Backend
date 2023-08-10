@@ -17,7 +17,7 @@ from typing_extensions import Annotated
 
 from connect_to_db import connect_to_db
 from create_user import create_user
-from auth import auth, endpoints
+from auth import auth, endpoints, google_auth
 from create_artist import create_artist
 from get_user import get_user
 from get_artists import get_artists
@@ -39,7 +39,7 @@ app.add_middleware(
 client = connect_to_db()
 app.include_router(auth.router, prefix='')
 app.include_router(endpoints.router, prefix='')
-
+app.include_router(google_auth.router, prefix='')
 
 class CreateEvent(BaseModel):
     created_by: str
@@ -52,6 +52,15 @@ class CreateEvent(BaseModel):
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+
+@app.get("/user/details")
+async def events_create(authorization: Annotated[Union[str, None], Depends(oauth2_scheme)] = None):
+    user = await validate_token(authorization, 'access')
+    user.pop("password")
+    return json.loads(json_util.dumps(user))
+
+
 
 
 @app.post("/events/create")
