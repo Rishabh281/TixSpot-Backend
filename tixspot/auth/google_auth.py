@@ -45,8 +45,8 @@ async def register(token: str = Form()):
         pwo = PasswordGenerator()
         password=pwo.generate()
         user=create_user(client['tixspot'], idinfo['email'],password )
-        if not user:
-            user=get_user(client['tixspot'], email=idinfo['email'], password=False)
+        user=get_user(client['tixspot'], email=idinfo['email'], password=False)
+        
         (access_token, refresh_token)= await tokens_from_login(idinfo['email'], password=False)
     except ValueError:
         # Invalid token
