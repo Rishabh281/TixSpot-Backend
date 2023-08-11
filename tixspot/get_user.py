@@ -1,4 +1,4 @@
-
+from bson import json_util
 
 def get_user(db, email=None, _id=None, password=True):
     """create_user"""

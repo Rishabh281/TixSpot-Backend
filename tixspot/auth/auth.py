@@ -30,7 +30,7 @@ class Token(BaseModel):
 
 
 class TokenData(BaseModel):
-    username: Union[str, None] = None
+    email: Union[str, None] = None
 
 
 class User(BaseModel):
@@ -95,20 +95,20 @@ async def validate_token(token, token_type):
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        print(token_type, )
+        email: str = payload.get("sub")
+        print(token_type)
         if token_type == 'refresh':
             if payload.get("token_type") != 'refresh':
                 raise credentials_exception
         if token_type == 'access':
             if payload.get("token_type") != 'access':
                 raise credentials_exception
-        if username is None:
+        if email is None:
             raise credentials_exception
-        token_data = TokenData(username=username)
+        token_data = TokenData(email=email)
     except JWTError:
         raise credentials_exception
-    user = get_user(database, email=token_data.username)
+    user = get_user(database, email=token_data.email)
     if user is None:
         raise credentials_exception
     return user
@@ -118,38 +118,39 @@ async def new_tokens_using_refresh(refresh):
     user = await validate_token(refresh, 'refresh')
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user['username'], "token_type": 'access'}, expires_delta=access_token_expires
+        data={"sub": user['email'], "token_type": 'access'}, expires_delta=access_token_expires
     )
     refresh_token_expires = timedelta(hours=REFRESH_TOKEN_EXPIRE_HOURS)
     refresh_token = create_refresh_token(
-        data={"sub": user['username'], "token_type": 'refresh'}, expires_delta=refresh_token_expires
+        data={"sub": user['email'], "token_type": 'refresh'}, expires_delta=refresh_token_expires
     )
     return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
 
 
-async def tokens_from_login(username, password, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_HOURS):
+async def tokens_from_login(email, password=True, ACCESS_TOKEN_EXPIRE_MINUTES=60, REFRESH_TOKEN_EXPIRE_HOURS=24):
 
-    user = get_user(database, username)
+    user = get_user(database, email)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
+            detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    verified_password = verify_password(password, user['password'])
+    if password:
+        verified_password = verify_password(password, user['password'])
 
-    if not user or not verified_password:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        if not verified_password:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect email or password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user['username'], "token_type": 'access'}, expires_delta=access_token_expires
+        data={"sub": user['email'], "token_type": 'access'}, expires_delta=access_token_expires
     )
     refresh_token_expires = timedelta(hours=REFRESH_TOKEN_EXPIRE_HOURS)
     refresh_token = create_refresh_token(
-        data={"sub": user['username'], "token_type": 'refresh'}, expires_delta=refresh_token_expires
+        data={"sub": user['email'], "token_type": 'refresh'}, expires_delta=refresh_token_expires
     )
     return (access_token, refresh_token)
